@@ -95,6 +95,79 @@ Tasks:
 - Build glassmorphic analyst containment modal in UI with playbook copy buttons.
 Exit: verified end-to-end containment approval and cryptographic audit recording in browser.
 
+## Phase 14 — Automated Threat Intelligence (TI) & IOC Enrichment
+Tasks:
+- Implement `ThreatIntelService` supporting pluggable providers:
+  - AbuseIPDB (IP abuse score, domain, ISP, country code)
+  - AlienVault OTX (Pulse indicators, threat adversary tags)
+  - VirusTotal / MalwareBazaar (File hash reputation: MD5, SHA-1, SHA-256)
+  - CISA KEV (Known Exploited Vulnerabilities catalog lookup)
+- Add local SQLite / in-memory LRU caching to eliminate external API latency, respect rate limits, and support air-gapped corporate deployments.
+- Build `/api/v1/threat-intel/lookup/{ioc_type}/{ioc_value}` and batch enrichment endpoints.
+- Auto-enrich alert evidence with color-coded threat badges (`MALICIOUS`, `SUSPICIOUS`, `CLEAN`, `UNKNOWN`) in the Alert Explorer and Alert Detail Modal.
+- Provide full attribution details: Confidence score (0-100), threat categories, and geographic origin.
+Exit: verified live/cached IOC enrichment with automated fallback when external feeds are unreachable.
+
+## Phase 15 — Direct Active Response (1-Click Agent Isolation & Rollback)
+Tasks:
+- Integrate directly with Wazuh Manager REST API `/active-response` endpoint over authenticated TLS session.
+- Expand `ContainmentService` with live dispatch capabilities for:
+  - `host-isolation`: Disconnects all network interfaces on the endpoint except SIEM keep-alive port (1514/1515).
+  - `firewall-drop`: Instantly injects blocking rules on Linux (`iptables`/`nftables`) or Windows (`netsh`).
+  - `kill-process`: Terminates identified malicious PID across the target agent.
+- Build a safe Rollback / Restore mechanism (`unblock` / `reconnect-host`) to instantly revert containment if an alert is deemed a false positive.
+- Enforce loopback (`127.0.0.1`), gateway, and SIEM server IP protection against self-lockout.
+- Log every direct dispatch and rollback event into the tamper-evident SQLite audit ledger with SHA-256 hash chaining.
+Exit: verified live agent command dispatch and rollback with sub-2-second execution confirmation.
+
+## Phase 16 — Automated Executive & Compliance Reporting Engine (PCI-DSS, ISO 27001, SOC 2, HIPAA)
+Tasks:
+- Correlate ingested Wazuh alerts and system events against international compliance standards:
+  - PCI-DSS 4.0 (Requirement 10: Log Monitoring, Requirement 11: File Integrity)
+  - ISO/IEC 27001:2022 (A.8.15 Logging, A.8.16 Monitoring Activities)
+  - SOC 2 Type II (Common Criteria 6.1, 6.8: Incident Response & Audit Trails)
+  - HIPAA Security Rule (45 CFR § 164.312: Audit Controls)
+- Implement `ComplianceReportService` with `/api/v1/compliance/summary` and `/api/v1/compliance/export/pdf` endpoints.
+- Build dedicated "Compliance & Audit" dashboard in frontend featuring:
+  - Real-time Compliance Readiness Gauges (% Passing vs Failing controls)
+  - Top 10 Attack Vectors and Compromised Entities
+  - 1-Click Executive PDF and HTML report generation with tamper-evident cryptographic signoff.
+Exit: complete, auditor-ready compliance report generation with CSV formula sanitization.
+
+## Phase 17 — Enterprise SSO & Role-Based Access Control (RBAC)
+Tasks:
+- Implement OAuth2 / OIDC authentication layer compatible with enterprise identity providers:
+  - Microsoft Entra ID (Azure Active Directory)
+  - Okta Identity Cloud
+  - Keycloak / FreeIPA on-premise IAM
+  - Standard Local Database fallback with Argon2id password hashing
+- Define granular role permissions:
+  - `SOC_ANALYST_TIER_1`: View alerts, perform AI threat hunting, open cases (Read-Only).
+  - `SOC_ANALYST_TIER_2`: Update cases, approve containment playbooks, add IOCs.
+  - `SOC_ADMIN`: Manage API keys, configure threat feeds, trigger direct active response, inspect audit ledger.
+- Add backend endpoint permission decorators (`@require_permission(...)`) and frontend dynamic UI gating.
+Exit: security test verification proving unauthorized role escalation is rejected with 403 Forbidden.
+
+## Phase 18 — User & Entity Behavior Analytics (UEBA) & Anomaly Detection
+Tasks:
+- Implement statistical and heuristic anomaly detection modules over indexed OpenSearch telemetry:
+  - **Impossible Travel:** Detects concurrent or near-concurrent logins from geographically disparate IP locations within impossible flight times.
+  - **After-Hours Anomaly:** Flags employee or service accounts accessing critical assets outside baseline operational hours.
+  - **Privilege Escalation Spikes:** Detects sudden bursts of administrative actions, `sudo` elevation, or group modifications.
+- Assign an aggregate User Risk Score (0-100) per employee and host entity.
+- Render UEBA Risk Timeline and Top Risky Users widget in the SIEM dashboard.
+Exit: test suite verifying synthetic baseline deviations trigger high-fidelity UEBA alerts.
+
+## Phase 19 — Multi-Cloud & SaaS Security Telemetry Connectors
+Tasks:
+- Build specialized log ingestion and normalization pipelines for modern enterprise cloud environments:
+  - **AWS CloudTrail & VPC Flow Logs:** S3-bucket based ingestion detecting root login, IAM privilege modifications, and open Security Groups.
+  - **Microsoft 365 / Entra ID Audit Logs:** Detects mass mail forwarding rules, consent grant abuse, and external sharing anomalies.
+  - **GitHub / GitLab Enterprise Audit Logs:** Detects hardcoded secrets, mass repository exports, and branch protection bypasses.
+- Normalize cloud telemetry into Wazuh/ECS unified schema.
+- Display multi-cloud threat origin map in the SIEM dashboard.
+Exit: end-to-end cloud event normalization and threat alerting verified without data drop.
+
 ## Work rules
 - Complete one vertical slice at a time.
 - Avoid parallel implementation of dependent contracts.
