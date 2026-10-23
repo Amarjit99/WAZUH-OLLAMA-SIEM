@@ -10,6 +10,7 @@ from app.services.database_backup_service import (
 from app.services.evidence_service import EvidenceService
 from app.services.health_service import HealthService
 from app.services.investigation_persistence_service import InvestigationPersistenceService
+from app.services.notification_service import NotificationService
 from app.services.ollama_client import OllamaClient
 from app.services.opensearch_client import OpenSearchClient
 from app.services.retention_service import RetentionService
@@ -24,9 +25,11 @@ __all__ = [
     "EvidenceService",
     "HealthService",
     "InvestigationPersistenceService",
+    "NotificationService",
     "OllamaClient",
     "OpenSearchClient",
     "RetentionService",
     "WazuhClient",
 ]
+
 

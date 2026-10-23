@@ -408,3 +408,46 @@ export interface CaseFilters {
   sort_order?: 'asc' | 'desc';
 }
 
+export interface AgentOSInfo {
+  name?: string | null;
+  version?: string | null;
+  platform?: string | null;
+  arch?: string | null;
+  uname?: string | null;
+}
+
+export interface AgentItem {
+  id: string;
+  name: string;
+  ip?: string | null;
+  status: 'active' | 'disconnected' | 'never_connected' | 'pending' | string;
+  version?: string | null;
+  node_name?: string | null;
+  date_add?: string | null;
+  last_keep_alive?: string | null;
+  os?: AgentOSInfo | null;
+}
+
+export interface AgentSummary {
+  total: number;
+  active: number;
+  disconnected: number;
+  never_connected: number;
+  pending: number;
+}
+
+export interface AgentListResponse {
+  items: AgentItem[];
+  summary: AgentSummary;
+  total_items: number;
+  retrieved_at: string;
+}
+
+export interface NotificationTestResponse {
+  status: 'delivered' | 'failed' | 'disabled';
+  message: string;
+  target_masked?: string | null;
+  dispatched_at: string;
+}
+
+

@@ -37,6 +37,18 @@ from app.schemas.investigation_history import (
     InvestigationSummaryItem,
 )
 
+from app.schemas.agent import (
+    AgentItem,
+    AgentListResponse,
+    AgentOSInfo,
+    AgentSummary,
+)
+from app.schemas.notification import (
+    AlertNotificationPayload,
+    NotificationTestRequest,
+    NotificationTestResponse,
+)
+
 __all__ = [
     "AlertListResponse",
     "DataStatus",
@@ -68,4 +80,12 @@ __all__ = [
     "InvestigationListResponse",
     "InvestigationPagination",
     "InvestigationSummaryItem",
+    "AgentItem",
+    "AgentListResponse",
+    "AgentOSInfo",
+    "AgentSummary",
+    "AlertNotificationPayload",
+    "NotificationTestRequest",
+    "NotificationTestResponse",
 ]
+

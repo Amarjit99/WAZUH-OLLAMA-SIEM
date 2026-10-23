@@ -125,6 +125,18 @@ class Settings(BaseSettings):
     QUEUE_URL: Optional[SecretStr] = None
     NOTIFICATIONS_ENABLED: bool = False
     TELEGRAM_ENABLED: bool = False
+    ALERT_WEBHOOK_URL: Optional[SecretStr] = Field(
+        default=None,
+        description="Webhook endpoint URL for automated severe alert notifications",
+    )
+    ALERT_WEBHOOK_MIN_LEVEL: int = Field(
+        default=10,
+        description="Minimum alert rule level (1-15) to trigger webhook dispatch (default 10)",
+    )
+    ALERT_WEBHOOK_TIMEOUT_SECONDS: float = Field(
+        default=5.0,
+        description="HTTP request timeout for webhook notifications",
+    )
 
 
     def is_wazuh_configured(self) -> bool:
@@ -144,6 +156,12 @@ class Settings(BaseSettings):
         if not self.API_KEY:
             return False
         return bool(self.API_KEY.get_secret_value().strip())
+
+    def is_alert_webhook_configured(self) -> bool:
+        """Check if alert webhook is enabled and configured."""
+        if not self.NOTIFICATIONS_ENABLED or not self.ALERT_WEBHOOK_URL:
+            return False
+        return bool(self.ALERT_WEBHOOK_URL.get_secret_value().strip())
 
 
 # Cached singleton instance

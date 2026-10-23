@@ -1,5 +1,6 @@
 """Alerts API router conforming to specs/API_CONTRACT.md and specs/DATA_SCHEMA.md."""
 
+import asyncio
 import csv
 from datetime import datetime, timedelta, timezone
 import io
@@ -515,5 +516,32 @@ async def investigate_alert_endpoint(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
+    # 9. Asynchronously dispatch alert webhook if configured and high severity
+    try:
+        notif_svc = getattr(request.app.state, "notification_service", None)
+        if notif_svc is None:
+            from app.services.notification_service import NotificationService
+            from app.core.config import get_settings
+            notif_svc = NotificationService(settings=get_settings())
+            request.app.state.notification_service = notif_svc
+
+        from app.schemas.notification import AlertNotificationPayload
+        notif_payload = AlertNotificationPayload(
+            event_type="investigated_high_severity_alert",
+            timestamp=alert.timestamp.isoformat() if hasattr(alert.timestamp, "isoformat") else str(alert.timestamp),
+            alert_id=alert.alert_id,
+            rule_id=str(alert.rule_id),
+            rule_description=alert.rule_description,
+            rule_level=alert.rule_level,
+            agent_id=alert.agent_id,
+            agent_name=alert.agent_name,
+            source_ip=alert.source_ip,
+            location=alert.location,
+        )
+        asyncio.create_task(notif_svc.send_alert_notification(notif_payload))
+    except Exception as notif_err:
+        logger.debug("Automated webhook notification skipped: %s", notif_err)
+
     return result
+
 

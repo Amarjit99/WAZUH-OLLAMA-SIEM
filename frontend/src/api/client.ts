@@ -19,7 +19,10 @@ import type {
   InvestigationListResponse,
   InvestigationQueryParams,
   NormalizedAlert,
+  AgentListResponse,
+  NotificationTestResponse,
 } from '../types/api';
+
 
 
 class ApiClient {
@@ -397,7 +400,42 @@ class ApiClient {
       signal,
     });
   }
+
+  /**
+   * Retrieve monitored Wazuh agent fleet with status and OS details.
+   */
+  async getAgents(
+    limit: number = 20,
+    offset: number = 0,
+    status?: string,
+    signal?: AbortSignal
+  ): Promise<AgentListResponse> {
+    const searchParams = new URLSearchParams();
+    searchParams.set('limit', String(Math.min(Math.max(1, limit), 100)));
+    searchParams.set('offset', String(Math.max(0, offset)));
+    if (status && status !== 'all') {
+      searchParams.set('status', status.trim());
+    }
+    const queryStr = searchParams.toString();
+    return this.request<AgentListResponse>(`/agents?${queryStr}`, { signal });
+  }
+
+  /**
+   * Dispatch a test security notification to the configured or override webhook.
+   */
+  async testNotificationWebhook(
+    webhookUrl?: string,
+    signal?: AbortSignal
+  ): Promise<NotificationTestResponse> {
+    return this.request<NotificationTestResponse>('/notifications/test', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ webhook_url: webhookUrl || null }),
+      signal,
+    });
+  }
 }
+
 
 export const apiClient = new ApiClient();
 

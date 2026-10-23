@@ -8,6 +8,7 @@ import { CaseModal } from './components/CaseModal';
 import { InvestigationDetailModal } from './components/InvestigationDetailModal';
 import { InvestigationHistoryTable } from './components/InvestigationHistoryTable';
 import { InvestigationModal } from './components/InvestigationModal';
+import { AgentFleetTable } from './components/AgentFleetTable';
 import type {
   AlertQueryParams,
   AuditVerificationStatusResponse,
@@ -82,8 +83,8 @@ export const App: React.FC = () => {
   const [investigationError, setInvestigationError] = useState<string | null>(null);
   const investigationAbortRef = useRef<AbortController | null>(null);
 
-  // Tab View State: live_alerts | history | cases
-  const [activeTab, setActiveTab] = useState<'live_alerts' | 'history' | 'cases'>('live_alerts');
+  // Tab View State: live_alerts | history | cases | fleet
+  const [activeTab, setActiveTab] = useState<'live_alerts' | 'history' | 'cases' | 'fleet'>('live_alerts');
   const [selectedHistoryInvestigationId, setSelectedHistoryInvestigationId] = useState<string | null>(null);
 
   // Case Management State
@@ -843,6 +844,14 @@ export const App: React.FC = () => {
           >
             <span>📁 Cases & Incident Management</span>
           </button>
+          <button
+            type="button"
+            className={`view-tab-btn ${activeTab === 'fleet' ? 'active' : ''}`}
+            onClick={() => setActiveTab('fleet')}
+            aria-current={activeTab === 'fleet' ? 'page' : undefined}
+          >
+            <span>🛡️ Endpoint Fleet & Webhooks</span>
+          </button>
         </nav>
 
         {/* View Content */}
@@ -891,6 +900,13 @@ export const App: React.FC = () => {
             />
           </section>
         )}
+
+        {activeTab === 'fleet' && (
+          <section className="fleet-section">
+            <AgentFleetTable />
+          </section>
+        )}
+
 
         {/* Phase Architecture Notice */}
         <section className="baseline-banner">

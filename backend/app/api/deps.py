@@ -134,3 +134,20 @@ def verify_api_auth(
             status_code=401,
         )
     return True
+
+
+from app.services.notification_service import NotificationService
+
+
+def get_notification_service(
+    request: Request,
+    settings: Settings = Depends(get_settings),
+) -> NotificationService:
+    """Dependency provider for NotificationService, reusing app-state instance when available."""
+    service = getattr(request.app.state, "notification_service", None)
+    if service is not None:
+        return service
+    service = NotificationService(settings=settings)
+    request.app.state.notification_service = service
+    return service
+
