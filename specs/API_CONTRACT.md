@@ -74,6 +74,37 @@ Create an export from an authorized query, investigation, or case. Enforce size/
 Return status and a safe download link or streamed file. Reauthorize at download time.
 Formats: CSV and JSON. Escape CSV formula injection and avoid exposing data outside the user's authorization.
 
+## Endpoint Fleet Management
+### GET `/agents`
+Returns list and summary of monitored Wazuh endpoint agents.
+- Query parameters: `limit` (int, default 50), `offset` (int, default 0), `status` (optional: `active`, `disconnected`, `never_connected`).
+- Response: `items` (list of agent items with id, name, ip, status, os, version, node_name), `total` count, `summary` (total, active, disconnected, never_connected counts), `source` (`wazuh-api` or `simulated`).
+
+## Automated Notifications
+### POST `/notifications/test-webhook`
+Sends a test security alert payload to the configured or provided webhook URL (Slack / Discord / Generic HTTP JSON).
+- Request body: `{"webhook_url": "optional string URL"}`
+- Response: `status` (`delivered`, `disabled`, `failed`), `message`, `dispatched_at`, `target_masked`.
+
+## Active Response & Containment (Human-in-the-Loop)
+### POST `/containment/propose`
+Formulates platform mitigation playbooks for an offending IP or host entity. No commands are executed.
+- Request body: `{"source_ip": "optional IP", "agent_name": "optional string", "agent_id": "optional string"}`
+- Rejects loopback (`127.0.0.1`, `::1`) with 400 Bad Request to prevent self-lockout.
+- Response: `target`, `entity_type`, `proposed_actions` (list of playbooks with `action_type`, `platform`, `risk_level`, `rationale`, and `commands` for Linux iptables, nftables, Windows Firewall, and Wazuh Active Response).
+
+### POST `/containment/execute`
+Approves and cryptographically logs a containment action. Requires analyst authorization.
+- Request body: `{"action_type": "BLOCK_IP" | "ISOLATE_HOST", "target": "string", "rationale": "string", "analyst_id": "string", "analyst_approval": true, "alert_id": "optional string"}`
+- Requires `analyst_approval: true`; returns 400 if false.
+- Commits audit event to SQLite audit ledger with tamper-evident SHA-256 hash chaining.
+- Response: `execution_id`, `action_type`, `target`, `status` (`APPROVED_LOGGED`), `commands`, `audit_event_id`, `audit_event_hash`, `timestamp`.
+
+### GET `/containment/history`
+Returns paginated list of analyst-approved containment actions and their cryptographic audit metadata.
+- Query parameters: `limit` (default 50), `offset` (default 0).
+- Response: `items`, `total`.
+
 ## Settings (admin only)
 Only expose safe, validated settings. Never return secrets. Configuration changes require explicit authorization and audit logging. Secret rotation should use deployment/secret-management mechanisms rather than returning secret values through the UI.
 

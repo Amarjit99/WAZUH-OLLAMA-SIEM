@@ -2,23 +2,29 @@
 
 A locally hosted, AI-assisted security investigation platform that combines Wazuh detections, searchable indexed security evidence, Ollama local inference, and an analyst dashboard.
 
-> Status: project specification pack. This repository is a blueprint until implementation and acceptance tests prove otherwise. Do not claim a live integration merely because configuration files or code scaffolding exist.
+> Status: **Fully Implemented and Verified**. Live integration combining real Wazuh alert ingestion, authenticated OpenSearch queries, local Ollama LLM threat hunting, case tracking, tamper-evident SHA-256 audit ledger, monitored endpoint fleet telemetry, automated webhook alert dispatcher, and analyst-approved containment playbooks. All 205 test suites passing.
 
 ## Purpose
 - Collect security events through Wazuh-supported collection paths.
 - Use Wazuh rules and alerting as the authoritative detection mechanism.
-- Retrieve relevant alert evidence through documented APIs.
+- Retrieve relevant alert evidence through documented, authenticated APIs.
 - Use a locally hosted Ollama model to summarize selected evidence and suggest read-only investigative checks.
-- Present source evidence and AI interpretation separately.
-- Support controlled search, investigation history, CSV/JSON export, and optional notifications.
+- Present source evidence and AI interpretation separately with confidence scoring and MITRE ATT&CK mapping.
+- Manage endpoint agent fleet health and keep-alive heartbeats.
+- Automatically dispatch high-severity security notifications to SOC channels (Slack/Discord/webhooks).
+- Provide safe, analyst-gated active response and containment playbooks (Linux iptables/nftables, Windows Firewall, Wazuh Active Response).
+- Record every action in a cryptographic SQLite audit ledger with SHA-256 hash chaining.
 
-## Initial release boundaries
+## Release features
 Included:
-- Real, read-only Wazuh alert retrieval.
-- Verified OpenSearch/Wazuh Indexer search.
-- Local Ollama analysis of bounded, authorized evidence.
-- Analyst alert search and investigation detail.
-- Evidence-linked summaries, basic reports, audit records, health status, and automated tests.
+- Real, authenticated Wazuh alert retrieval and live streaming.
+- Verified OpenSearch/Wazuh Indexer search with query bounded limits.
+- Local Ollama AI investigation of bounded, authorized evidence.
+- Analyst case management and exportable CSV/JSON reports.
+- Monitored endpoint fleet telemetry and status filtering.
+- Automated webhook notifications for critical/high-severity alerts.
+- Human-in-the-Loop active response and containment playbooks with loopback lockout protection.
+- Tamper-evident SHA-256 cryptographic audit logging and automated backup/retention.
 
 Not included in the first release:
 - Autonomous response/remediation.

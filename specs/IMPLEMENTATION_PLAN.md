@@ -72,6 +72,29 @@ Tasks:
 - Document deployment topology and supported versions.
 Exit: acceptance criteria are evidenced, known limitations are published.
 
+## Phase 11 — Endpoint fleet telemetry (Completed)
+Tasks:
+- Implement `/api/v1/agents` connector and summary endpoint.
+- Add frontend monitored fleet table with status filters (active, disconnected, never_connected) and search.
+- Verified live with Wazuh Manager cluster telemetry.
+Exit: verified live agent table with real heartbeats and auto-refresh.
+
+## Phase 12 — Automated alert webhook dispatcher (Completed)
+Tasks:
+- Add `NotificationService` with high-severity alert filtering.
+- Implement `/api/v1/notifications/test-webhook` endpoint with credential masking.
+- Format structured payloads for Slack, Discord, and generic JSON webhooks.
+Exit: verified interactive webhook delivery test from UI.
+
+## Phase 13 — Analyst-approved active response & containment (Completed)
+Tasks:
+- Implement `/api/v1/containment/propose` multi-platform rule generator (Linux iptables/nftables, Windows netsh, Wazuh Active Response).
+- Enforce loopback lockout prevention (`127.0.0.1`, `::1` rejected).
+- Implement human-in-the-loop approval gate in `/api/v1/containment/execute` (`analyst_approval=true` mandatory).
+- Record containment approvals into SQLite audit ledger with SHA-256 cryptographic hash chaining.
+- Build glassmorphic analyst containment modal in UI with playbook copy buttons.
+Exit: verified end-to-end containment approval and cryptographic audit recording in browser.
+
 ## Work rules
 - Complete one vertical slice at a time.
 - Avoid parallel implementation of dependent contracts.

@@ -64,5 +64,21 @@ A feature is not complete because a screen renders or a mock returns a plausible
 - Known limitations and unverified integrations are listed.
 - Test report distinguishes passed, failed, and not run.
 
+## AC-011: Endpoint fleet monitoring
+- Backend retrieves agent statuses (active, disconnected, never_connected) from Wazuh Manager API or authorized fallback.
+- Fleet metrics and summary statistics accurately represent monitored endpoints.
+- Hostname, IP, and status query filters function correctly and safely.
+
+## AC-012: Automated alert notifications
+- High-severity alerts trigger structured notification dispatch to configured webhooks.
+- Payloads format correctly for Slack, Discord, and generic JSON webhooks.
+- Masking prevents leaking internal tokens or private credentials in outbound webhook logs.
+
+## AC-013: Active response & containment playbooks
+- Multi-platform containment commands (iptables, nftables, Windows Firewall, Wazuh Active Response) are generated without autonomous execution.
+- Human analyst explicit authorization (`analyst_approval=true`) is enforced before any containment action is approved or logged.
+- Blocking self-loopback addresses (`127.0.0.1`, `::1`) is rejected with a validation error to prevent self-lockout.
+- Every approved containment action is committed to the tamper-evident SQLite audit ledger with SHA-256 hash chaining.
+
 ## Release gate
 No release claim of “real-time,” “local-only,” or “production-ready” unless the corresponding latency, outbound-traffic, security, and acceptance tests have been run and recorded.
