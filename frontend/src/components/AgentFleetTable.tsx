@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../api/client';
+import { ContainmentModal } from './ContainmentModal';
 import type { AgentItem, AgentSummary, NotificationTestResponse } from '../types/api';
 
 export const AgentFleetTable: React.FC = () => {
@@ -9,6 +10,7 @@ export const AgentFleetTable: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedAgentForContainment, setSelectedAgentForContainment] = useState<AgentItem | null>(null);
   
   // Webhook Test State
   const [testUrl, setTestUrl] = useState<string>('');
@@ -157,18 +159,19 @@ export const AgentFleetTable: React.FC = () => {
                 <th className="px-4 py-3">Operating System</th>
                 <th className="px-4 py-3">Agent Version</th>
                 <th className="px-4 py-3">Node / Cluster</th>
+                <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800 text-slate-300">
               {loading && agents.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                     Querying Wazuh Manager agent registry...
                   </td>
                 </tr>
               ) : filteredAgents.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
                     No agents matched the criteria.
                   </td>
                 </tr>
@@ -215,6 +218,15 @@ export const AgentFleetTable: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-xs text-slate-400">
                       {agent.node_name || 'node01'}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        onClick={() => setSelectedAgentForContainment(agent)}
+                        className="px-2.5 py-1 text-xs font-semibold bg-rose-950/60 hover:bg-rose-900/80 text-rose-300 border border-rose-800 rounded transition inline-flex items-center gap-1"
+                        title="Open Human-in-the-Loop Active Response Containment"
+                      >
+                        <span>🛡️ Contain</span>
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -278,6 +290,21 @@ export const AgentFleetTable: React.FC = () => {
           </div>
         )}
       </div>
+
+      {selectedAgentForContainment && (
+        <ContainmentModal
+          isOpen={!!selectedAgentForContainment}
+          onClose={() => setSelectedAgentForContainment(null)}
+          targetInfo={{
+            agentId: selectedAgentForContainment.id,
+            agentName: selectedAgentForContainment.name,
+            sourceIp:
+              selectedAgentForContainment.ip && selectedAgentForContainment.ip !== 'any'
+                ? selectedAgentForContainment.ip
+                : undefined,
+          }}
+        />
+      )}
     </div>
   );
 };

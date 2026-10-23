@@ -2,6 +2,7 @@ from app.services.audit_archival_service import (
     AuditArchivalService,
     AuditTrailVerificationReport,
 )
+from app.services.containment_service import ContainmentService
 from app.services.database_backup_service import (
     DatabaseBackupResult,
     DatabaseBackupService,
@@ -19,6 +20,7 @@ from app.services.wazuh_client import WazuhClient
 __all__ = [
     "AuditArchivalService",
     "AuditTrailVerificationReport",
+    "ContainmentService",
     "DatabaseBackupResult",
     "DatabaseBackupService",
     "DatabaseRestoreResult",

@@ -151,3 +151,14 @@ def get_notification_service(
     request.app.state.notification_service = service
     return service
 
+
+from app.services.containment_service import ContainmentService
+
+
+def get_containment_service(
+    settings: Settings = Depends(get_settings),
+) -> ContainmentService:
+    """Dependency provider for ContainmentService."""
+    return ContainmentService(settings=settings)
+
+

@@ -21,6 +21,10 @@ import type {
   NormalizedAlert,
   AgentListResponse,
   NotificationTestResponse,
+  ContainmentProposalResponse,
+  ContainmentExecutionRequest,
+  ContainmentExecutionResponse,
+  ContainmentHistoryRecord,
 } from '../types/api';
 
 
@@ -434,7 +438,55 @@ class ApiClient {
       signal,
     });
   }
+
+  /**
+   * Propose active response containment playbooks based on alert/host context.
+   */
+  async proposeContainment(
+    params: {
+      alert_id?: string;
+      investigation_id?: string;
+      source_ip?: string;
+      agent_id?: string;
+      agent_name?: string;
+      process_name?: string;
+    },
+    signal?: AbortSignal
+  ): Promise<ContainmentProposalResponse> {
+    return this.request<ContainmentProposalResponse>('/containment/propose', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+      signal,
+    });
+  }
+
+  /**
+   * Authorize and commit a containment action to the cryptographic audit trail.
+   */
+  async executeContainment(
+    input: ContainmentExecutionRequest,
+    signal?: AbortSignal
+  ): Promise<ContainmentExecutionResponse> {
+    return this.request<ContainmentExecutionResponse>('/containment/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input),
+      signal,
+    });
+  }
+
+  /**
+   * Retrieve chronological log of audited containment actions.
+   */
+  async getContainmentHistory(
+    limit: number = 20,
+    signal?: AbortSignal
+  ): Promise<ContainmentHistoryRecord[]> {
+    return this.request<ContainmentHistoryRecord[]>(`/containment/history?limit=${limit}`, { signal });
+  }
 }
+
 
 
 export const apiClient = new ApiClient();

@@ -450,4 +450,68 @@ export interface NotificationTestResponse {
   dispatched_at: string;
 }
 
+export type ContainmentActionType = 'BLOCK_IP' | 'ISOLATE_HOST' | 'KILL_PROCESS' | 'DISABLE_USER';
+
+export type ContainmentPlatform =
+  | 'LINUX_IPTABLES'
+  | 'LINUX_NFTABLES'
+  | 'WINDOWS_NETSH'
+  | 'WAZUH_ACTIVE_RESPONSE';
+
+export interface GeneratedCommand {
+  platform: ContainmentPlatform;
+  command: string;
+  description: string;
+}
+
+export interface ProposedContainmentAction {
+  action_type: ContainmentActionType;
+  target: string;
+  rationale: string;
+  risk_level: 'LOW' | 'MEDIUM' | 'HIGH';
+  commands: GeneratedCommand[];
+}
+
+export interface ContainmentProposalResponse {
+  proposed_actions: ProposedContainmentAction[];
+  generated_at: string;
+}
+
+export interface ContainmentExecutionRequest {
+  action_type: ContainmentActionType;
+  target: string;
+  rationale: string;
+  analyst_id: string;
+  analyst_approval: boolean;
+  alert_id?: string;
+  investigation_id?: string;
+}
+
+export interface ContainmentExecutionResponse {
+  execution_id: string;
+  action_type: ContainmentActionType;
+  target: string;
+  status: string;
+  generated_commands: GeneratedCommand[];
+  audit_id: string;
+  approved_at: string;
+  analyst_id: string;
+  message: string;
+}
+
+export interface ContainmentHistoryRecord {
+  audit_id: string;
+  timestamp: string;
+  actor_id: string;
+  action: string;
+  resource_id: string;
+  outcome: string;
+  event_hash: string;
+  target?: string;
+  action_type?: string;
+  rationale?: string;
+  alert_id?: string;
+}
+
+
 

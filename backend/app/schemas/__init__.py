@@ -48,6 +48,16 @@ from app.schemas.notification import (
     NotificationTestRequest,
     NotificationTestResponse,
 )
+from app.schemas.containment import (
+    ContainmentActionType,
+    ContainmentExecutionRequest,
+    ContainmentExecutionResponse,
+    ContainmentPlatform,
+    ContainmentProposalRequest,
+    ContainmentProposalResponse,
+    GeneratedCommand,
+    ProposedContainmentAction,
+)
 
 __all__ = [
     "AlertListResponse",
@@ -87,5 +97,14 @@ __all__ = [
     "AlertNotificationPayload",
     "NotificationTestRequest",
     "NotificationTestResponse",
+    "ContainmentActionType",
+    "ContainmentExecutionRequest",
+    "ContainmentExecutionResponse",
+    "ContainmentPlatform",
+    "ContainmentProposalRequest",
+    "ContainmentProposalResponse",
+    "GeneratedCommand",
+    "ProposedContainmentAction",
 ]
+
 
