@@ -6,6 +6,7 @@ from typing import Dict, Tuple
 import httpx
 
 from app.core.config import Settings
+from app.core.tls import build_ssl_context
 from app.schemas.health import DependencyHealth, DependencyStatus, ServiceStatus
 
 logger = logging.getLogger("siem.health")
@@ -18,7 +19,7 @@ class HealthService:
         self.settings = settings
 
     async def check_wazuh(self) -> DependencyHealth:
-        """Probe Wazuh API availability with TLS verification."""
+        """Probe Wazuh API availability and authentication with TLS verification."""
         if not self.settings.is_wazuh_configured():
             return DependencyHealth(
                 status=DependencyStatus.NOT_CONFIGURED,
@@ -26,19 +27,28 @@ class HealthService:
             )
 
         start_time = time.perf_counter()
-        verify_opt: bool | str = True
-        if self.settings.WAZUH_CA_CERT_PATH:
-            verify_opt = self.settings.WAZUH_CA_CERT_PATH
-
         try:
-            # Documented Wazuh endpoint /version or /
-            async with httpx.AsyncClient(verify=verify_opt, timeout=3.0) as client:
-                resp = await client.get(f"{self.settings.WAZUH_API_URL.rstrip('/')}/")
+            ssl_context = build_ssl_context(self.settings.WAZUH_CA_CERT_PATH)
+            user = self.settings.WAZUH_API_USERNAME or ""
+            pwd = self.settings.WAZUH_API_PASSWORD.get_secret_value() if self.settings.WAZUH_API_PASSWORD else ""
+
+            async with httpx.AsyncClient(verify=ssl_context, timeout=httpx.Timeout(3.0, connect=2.0)) as client:
+                resp = await client.post(
+                    f"{self.settings.WAZUH_API_URL.rstrip('/')}/security/user/authenticate",
+                    auth=(user, pwd),
+                )
                 latency_ms = (time.perf_counter() - start_time) * 1000.0
-                if resp.status_code in (200, 401):  # 401 proves listener is active
+
+                if resp.status_code == 200:
                     return DependencyHealth(
-                        status=DependencyStatus.CONNECTED if resp.status_code == 200 else DependencyStatus.DEGRADED,
-                        message="Wazuh API endpoint reachable",
+                        status=DependencyStatus.CONNECTED,
+                        message="Wazuh API authenticated and operational (TLS verified)",
+                        latency_ms=round(latency_ms, 2),
+                    )
+                if resp.status_code == 401:
+                    return DependencyHealth(
+                        status=DependencyStatus.DEGRADED,
+                        message="Wazuh API endpoint reachable but credentials rejected",
                         latency_ms=round(latency_ms, 2),
                     )
                 return DependencyHealth(
@@ -57,14 +67,14 @@ class HealthService:
                 message="Wazuh API request timed out",
             )
         except Exception as err:
-            logger.debug("Wazuh health check failure: %s", str(err))
+            logger.debug("Wazuh health check failure: %s", type(err).__name__)
             return DependencyHealth(
                 status=DependencyStatus.UNAVAILABLE,
                 message="Wazuh API unavailable or TLS verification failed",
             )
 
     async def check_opensearch(self) -> DependencyHealth:
-        """Probe OpenSearch/Wazuh Indexer availability with TLS verification."""
+        """Probe OpenSearch/Wazuh Indexer availability and authentication with TLS verification."""
         if not self.settings.is_opensearch_configured():
             return DependencyHealth(
                 status=DependencyStatus.NOT_CONFIGURED,
@@ -72,18 +82,28 @@ class HealthService:
             )
 
         start_time = time.perf_counter()
-        verify_opt: bool | str = True
-        if self.settings.OPENSEARCH_CA_CERT_PATH:
-            verify_opt = self.settings.OPENSEARCH_CA_CERT_PATH
-
         try:
-            async with httpx.AsyncClient(verify=verify_opt, timeout=3.0) as client:
-                resp = await client.get(f"{self.settings.OPENSEARCH_URL.rstrip('/')}/")
+            ssl_context = build_ssl_context(self.settings.OPENSEARCH_CA_CERT_PATH)
+            user = self.settings.OPENSEARCH_USERNAME or ""
+            pwd = self.settings.OPENSEARCH_PASSWORD.get_secret_value() if self.settings.OPENSEARCH_PASSWORD else ""
+
+            async with httpx.AsyncClient(verify=ssl_context, timeout=httpx.Timeout(3.0, connect=2.0)) as client:
+                resp = await client.get(
+                    f"{self.settings.OPENSEARCH_URL.rstrip('/')}/",
+                    auth=(user, pwd),
+                )
                 latency_ms = (time.perf_counter() - start_time) * 1000.0
-                if resp.status_code in (200, 401):
+
+                if resp.status_code == 200:
                     return DependencyHealth(
-                        status=DependencyStatus.CONNECTED if resp.status_code == 200 else DependencyStatus.DEGRADED,
-                        message="OpenSearch cluster endpoint reachable",
+                        status=DependencyStatus.CONNECTED,
+                        message="OpenSearch cluster authenticated and operational (TLS verified)",
+                        latency_ms=round(latency_ms, 2),
+                    )
+                if resp.status_code in (401, 403):
+                    return DependencyHealth(
+                        status=DependencyStatus.DEGRADED,
+                        message="OpenSearch cluster reachable but credentials rejected",
                         latency_ms=round(latency_ms, 2),
                     )
                 return DependencyHealth(
@@ -102,7 +122,7 @@ class HealthService:
                 message="OpenSearch request timed out",
             )
         except Exception as err:
-            logger.debug("OpenSearch health check failure: %s", str(err))
+            logger.debug("OpenSearch health check failure: %s", type(err).__name__)
             return DependencyHealth(
                 status=DependencyStatus.UNAVAILABLE,
                 message="OpenSearch unavailable or TLS verification failed",

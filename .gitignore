@@ -37,10 +37,21 @@ Thumbs.db
 # Local data/logs
 logs/
 tmp/
-data/local/
+run/
+data/
+/models/
+!backend/app/models/
+
+.ollama/
 *.log
 *.sqlite3
 *.db
+*.db-shm
+*.db-wal
+*.dpapi
+*.enc.db
+releases/
+
 
 # Generated reports and test artifacts
 reports/generated/

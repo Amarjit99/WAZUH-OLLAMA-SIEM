@@ -19,6 +19,18 @@ class Settings(BaseSettings):
     APP_HOST: str = Field(default="127.0.0.1", description="Server bind host")
     APP_PORT: int = Field(default=8001, description="Server bind port")
     LOG_LEVEL: str = Field(default="INFO", description="Logging level")
+    CORS_ALLOWED_ORIGINS: str = Field(
+        default="http://127.0.0.1:5174,http://localhost:5174,http://127.0.0.1:5173,http://localhost:5173",
+        description="Comma-separated allowed origins for CORS",
+    )
+    API_KEY: Optional[SecretStr] = Field(
+        default=None,
+        description="Optional secret bearer token for API authentication",
+    )
+    API_AUTH_REQUIRED: bool = Field(
+        default=False,
+        description="Fail-closed flag requiring API authentication for protected endpoints",
+    )
 
     # Wazuh API
     WAZUH_API_URL: str = Field(
@@ -56,6 +68,7 @@ class Settings(BaseSettings):
 
     # Safety and limits
     MAX_QUERY_WINDOW_HOURS: int = Field(default=24, description="Maximum query time window in hours")
+    DEFAULT_QUERY_WINDOW_HOURS: int = Field(default=1, description="Default query time window in hours")
     MAX_SEARCH_RESULTS: int = Field(default=100, description="Maximum search results per page")
     MAX_EVIDENCE_EVENTS: int = Field(default=50, description="Maximum evidence events sent to LLM")
     MAX_EVIDENCE_BYTES: int = Field(default=50000, description="Maximum evidence size in bytes")
@@ -64,11 +77,55 @@ class Settings(BaseSettings):
         description="Strictly development/demo fixtures flag. Must be false in production.",
     )
 
-    # Optional persistence & notifications
-    DATABASE_URL: Optional[SecretStr] = None
+    # Persistence & Audit (Phase 7)
+    DATABASE_URL: str = Field(
+        default="sqlite+aiosqlite:///data/siem_history.db",
+        description="Async database connection URL",
+    )
+    DATABASE_ECHO: bool = Field(
+        default=False,
+        description="Enable SQLAlchemy echo query logging",
+    )
+    INVESTIGATION_RETENTION_DAYS: int = Field(
+        default=90,
+        description="Investigation history retention in days",
+    )
+    AUDIT_RETENTION_DAYS: int = Field(
+        default=365,
+        description="Audit log retention in days",
+    )
+    AUDIT_ARCHIVE_DIR: str = Field(
+        default="data/archives",
+        description="Directory for compressed audit archive files",
+    )
+    DATABASE_BACKUP_DIR: str = Field(
+        default="data/backups",
+        description="Directory for database backup snapshots",
+    )
+    BACKUP_ENCRYPTION_ENABLED: bool = Field(
+        default=True,
+        description="Enable AES-256-GCM authenticated encryption for database backups",
+    )
+    BACKUP_KEY_PATH: str = Field(
+        default="data/keys/backup_encryption_key.dpapi",
+        description="Path to DPAPI-protected backup encryption key blob",
+    )
+    BACKUP_SCHEDULE_ENABLED: bool = Field(
+        default=False,
+        description="Enable background periodic database backup scheduler (disabled by default)",
+    )
+    BACKUP_INTERVAL_MINUTES: int = Field(
+        default=1440,
+        description="Backup schedule interval in minutes (default 24h / 1440m)",
+    )
+    CHECKPOINT_SIGNING_ALGORITHM: str = Field(
+        default="NONE",
+        description="Signature algorithm for audit checkpoints (NONE, HMAC-SHA256, or DPAPI)",
+    )
     QUEUE_URL: Optional[SecretStr] = None
     NOTIFICATIONS_ENABLED: bool = False
     TELEGRAM_ENABLED: bool = False
+
 
     def is_wazuh_configured(self) -> bool:
         """Check if Wazuh API credentials are configured."""
@@ -81,6 +138,12 @@ class Settings(BaseSettings):
     def is_ollama_configured(self) -> bool:
         """Check if Ollama model is configured."""
         return bool(self.OLLAMA_MODEL and self.OLLAMA_MODEL.strip())
+
+    def is_api_auth_configured(self) -> bool:
+        """Check if API key is configured with non-empty content."""
+        if not self.API_KEY:
+            return False
+        return bool(self.API_KEY.get_secret_value().strip())
 
 
 # Cached singleton instance

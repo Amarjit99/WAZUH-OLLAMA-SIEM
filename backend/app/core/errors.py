@@ -76,9 +76,11 @@ def register_error_handlers(app: FastAPI) -> None:
             401: ErrorCode.UNAUTHORIZED,
             403: ErrorCode.FORBIDDEN,
             404: ErrorCode.NOT_FOUND,
+            409: ErrorCode.CONFLICT,
             429: ErrorCode.RATE_LIMITED,
             503: ErrorCode.DEPENDENCY_UNAVAILABLE,
             504: ErrorCode.UPSTREAM_TIMEOUT,
+            507: ErrorCode.INSUFFICIENT_STORAGE,
         }
         error_code = code_map.get(exc.status_code, ErrorCode.INTERNAL_ERROR)
         payload = ErrorResponse(
@@ -107,7 +109,7 @@ def register_error_handlers(app: FastAPI) -> None:
                 details=clean_errors,
             )
         )
-        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=payload.model_dump())
+        return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, content=payload.model_dump())
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
